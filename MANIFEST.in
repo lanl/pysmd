@@ -1,0 +1,9 @@
+include docs/Makefile
+include docs/make.bat
+include docs/README.rst
+graft docs/source
+prune docs/source/api
+recursive-include examples *.md *.py *.rst *.xyz
+recursive-include production *.md *.py *.rst *.xyz
+global-exclude .DS_Store
+global-exclude *.py[cod]

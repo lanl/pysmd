@@ -1,0 +1,106 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.dylib
+*.pyd
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+pip-wheel-metadata/
+sdist/
+var/
+wheelhouse/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+env/
+ENV/
+venv/
+env.bak/
+venv.bak/
+__pypackages__/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+coverage.json
+*,cover
+
+# Type-checker and linter caches
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Sphinx documentation
+docs/build/
+docs/source/api/
+
+# MacOS files
+.DS_Store
+
+# Windows files
+Thumbs.db
+Desktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.swo
+*.swp
+*~
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Generated example output
+examples/**/*.csv
+examples/**/*.h5
+examples/**/*.log
+examples/**/*.molden
+examples/**/*.npy
+examples/**/*.npz
+examples/**/*.out
+examples/**/*.pdf
+examples/**/*.png
+examples/**/*.svg
+examples/**/*.txt
+
+# Optional PySMD debug log
+pysmd_debug.log
+
+# Track only production source files, inputs, and documentation.
+production/**
+!production/**/
+!production/**/*.py
+!production/**/*.xyz
+!production/**/*.md
+!production/**/*.rst

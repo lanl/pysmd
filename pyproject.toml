@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pysmd"
+description = "PySMD: Open-source driver for ab initio Shadow Molecular Dynamics."
+dynamic = ["version"]
+
+license = "BSD-3-Clause"
+license-files = ["LICENSE.md", "pysmd/interface/pyscf/PYSCF_LICENSE.md"]
+readme = "README.md"
+
+authors = [
+  {name = "Ilia M. Mazin", email = "imazin@lanl.gov"},
+  {name = "Yu Zhang", email = "zhy@lanl.gov"},
+  {name = "Anders M.N. Niklasson", email = "amn@lanl.gov"},
+]
+
+maintainers = [
+  {name = "Ilia M. Mazin", email = "imazin@lanl.gov"},
+]
+
+requires-python = ">=3.10"
+
+dependencies = [
+  "numpy",
+  "scipy",
+  "h5py",
+  "pyscf>=2.11",
+]
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Chemistry",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Software Development",
+]
+
+keywords = [
+  "ab initio",
+  "molecular dynamics",
+  "scientific computing",
+  "quantum mechanics",
+  "theoretical",
+  "chemistry",
+  "physics",
+]
+
+[project.urls]
+Homepage = "https://github.com/lanl/pysmd"
+Repository = "https://github.com/lanl/pysmd"
+Issues = "https://github.com/lanl/pysmd/issues"
+
+[project.optional-dependencies]
+docs = [
+  "sphinx>=8.1",
+  "sphinx-rtd-theme>=3.0",
+]
+production = [
+  "matplotlib",
+]
+test = [
+  "pytest>=8",
+]
+torch = [
+  "torch>=2.0",
+]
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["pysmd*"]
+namespaces = false
+
+[tool.setuptools.dynamic]
+version = {attr = "pysmd.__version__"}
