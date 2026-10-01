@@ -15,6 +15,8 @@ in this material to reproduce, prepare derivative works, distribute copies
 to the public, perform publicly and display publicly, and to permit others
 to do so.
 
+[![Documentation Status](https://readthedocs.org/projects/pysmd/badge/?version=latest)](https://pysmd.readthedocs.io/en/latest/)
+
 ## Installation
 
 Install PySMD and its runtime dependencies from PyPI:

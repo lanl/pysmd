@@ -59,6 +59,7 @@ keywords = [
 Homepage = "https://github.com/lanl/pysmd"
 Repository = "https://github.com/lanl/pysmd"
 Issues = "https://github.com/lanl/pysmd/issues"
+Documentation = "https://pysmd.readthedocs.io/en/latest/"
 
 [project.optional-dependencies]
 docs = [
