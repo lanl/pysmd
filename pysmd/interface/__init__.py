@@ -20,10 +20,14 @@ currently :mod:`pysmd.interface.pyscf` provides the PySCF implementation.
 
 The PySCF submodule provides a factory function for automatic interface detection:
     >>> from pysmd.interface.pyscf import PyscfDriver
-    >>> qm_interface = PyscfDriver(pyscf_mf=mf)  # Auto-detects RHF, RKS, etc.
+    >>> qm_interface = PyscfDriver(pyscf_mf=mf)  # Auto-detects RHF, RKS, UHF, UKS
 
 Or import specific classes:
-    >>> from pysmd.interface.pyscf import RHF, RKS
+    >>> from pysmd.interface.pyscf import RHF, RKS, UHF, UKS
+
+The unrestricted UHF and UKS adapters are used by
+:mod:`pysmd.open_shell` and implement the optional spin-resolved hooks of
+:class:`pysmd.interface.qm_software.QMSoftware`.
 """
 
 from pysmd.interface import qm_software

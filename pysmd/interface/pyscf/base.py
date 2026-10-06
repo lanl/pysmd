@@ -228,17 +228,22 @@ class PyscfBase(qm_software.QMSoftware):
             unit=self.mol.unit,
             inplace=True
         )
-        # PySCF mean-field objects may cache AO two-electron integrals.
-        # Those integrals are geometry-dependent and must not survive an MD step.
-        if hasattr(self.mf, "_eri"):
-            self.mf._eri = None
-        for grids in (
-            getattr(self.mf, "grids", None),
-            getattr(getattr(self, "grad", None), "grids", None),
-        ):
-            if hasattr(grids, "reset"):
-                grids.reset(mol=self.mol)
+        # Clear geometry dependent PySCF caches.
+        self.mf.reset(self.mol)
+        grids = getattr(getattr(self, "grad", None), "grids", None)
+        if hasattr(grids, "reset"):
+            grids.reset(mol=self.mol)
         return self.get_atomic_coords()
+
+
+    def capture_overlap_basis(self) -> gto.MoleBase:
+        """Copy the current mol so we have a reference for MOM/IMOM at the next geometry"""
+        return self.mol.copy()
+
+
+    def compute_cross_overlap(self, reference_basis: gto.MoleBase) -> Any:
+        """Compute overlap across geometries. We need to do this to set MOM/IMOM occupations."""
+        return la.asarray(gto.intor_cross("int1e_ovlp", self.mol, reference_basis))
 
 
     def get_atomic_masses(self) -> Any:

@@ -72,6 +72,10 @@ class NewtonRaphson:
         ### Verify interface object
         self.interface: (qm_software.QMSoftware | None) = None
         self.interface = qm_interface
+        if getattr(self.interface, "spin_channels", 1) != 1:
+            raise TypeError(
+                "Use pysmd.open_shell.newton_raphson for an unrestricted interface."
+            )
         log.info(" -- Inherited QM software interface object:\n"
                 f"   {self.interface.__class__}")
 

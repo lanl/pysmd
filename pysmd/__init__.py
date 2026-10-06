@@ -25,6 +25,8 @@ Available modules:
     - `closed_shell`: Classes, kernels, and EOM parameters for molecular
                       dynamics (MD) and self-consistent field (SCF)
                       procedures for closed-shell systems.
+    - `open_shell`: Spin-resolved SCF, shadow MD, DeltaSCF excited states,
+                    and Ziegler spin correction for UHF/UKS references.
 
 The variable ``DEBUG_MODE`` controls the logging behavior of the package.
 When it is ``True``, debug output is written to ``log/pysmd_debug.log`` in the
@@ -48,6 +50,7 @@ from pysmd import (
     interface,
     common,
     closed_shell,
+    open_shell,
     lib,
 )
 
@@ -57,5 +60,6 @@ __all__ = [
     "interface",
     "common",
     "closed_shell",
+    "open_shell",
     "lib",
 ]

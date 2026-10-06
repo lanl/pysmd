@@ -38,7 +38,34 @@ class QMSoftware(abc.ABC):
     basis and units, and the caller is responsible for preserving the
     backend's array type. The generic class does not prescribe a particular
     software package, storage type, or numerical implementation.
+
+    ``spin_channels`` is one for restricted adapters and two for unrestricted
+    adapters, whose densities carry a leading alpha/beta axis. The optional,
+    non-abstract hooks below are required only by :mod:`pysmd.open_shell`;
+    their defaults raise ``NotImplementedError``.
     """
+
+    spin_channels: int = 1
+
+
+    def get_spin_electron_counts(self) -> tuple[int, int]:
+        """Return fixed alpha/beta populations for an unrestricted reference."""
+        raise NotImplementedError("This interface does not provide spin populations.")
+
+
+    def get_potential_response(self, dm: Any) -> Any:
+        """Return an operator applying the potential derivative at ``dm``."""
+        raise NotImplementedError("This interface does not provide a response operator.")
+
+
+    def capture_overlap_basis(self) -> Any:
+        """Return an independent basis/geometry snapshot for orbital tracking."""
+        raise NotImplementedError("This interface does not provide cross-geometry overlaps.")
+
+
+    def compute_cross_overlap(self, reference_basis: Any) -> Any:
+        """Return ``<current AO | reference AO>`` for a captured basis snapshot."""
+        raise NotImplementedError("This interface does not provide cross-geometry overlaps.")
 
 
     @abc.abstractmethod

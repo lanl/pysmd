@@ -21,20 +21,22 @@ backend conversion, are implemented in the adapter classes rather than by
 modifying PySCF itself.
 
 The module also provides a factory function that detects the mean-field type
-and returns the appropriate interface class.
+and returns the appropriate interface class. Restricted (RHF, RKS) adapters
+are used by :mod:`pysmd.closed_shell`; the unrestricted (UHF, UKS) adapters,
+are used by :mod:`pysmd.open_shell`.
 
 Usage
 -----
 Call the module-level factory function with a PySCF mean-field object:
 
     >>> from pysmd.interface.pyscf import PyscfDriver
-    >>> qm_interface = PyscfDriver(pyscf_mf=mf)  # Automatically detects RHF, RKS, etc.
+    >>> qm_interface = PyscfDriver(pyscf_mf=mf)  # Automatically detects RHF, RKS, UHF, UKS
 
 Or import specific classes directly:
 
-    >>> from pysmd.interface.pyscf import RHF, RKS
+    >>> from pysmd.interface.pyscf import RHF, RKS, UHF, UKS
     >>> qm_interface = RHF(pyscf_mf=mf)
-    >>> qm_interface = RKS(pyscf_mf=mf)
+    >>> qm_interface = UKS(pyscf_mf=mf)
 """
 
 from typing import Any
@@ -46,6 +48,8 @@ from pysmd.common import logger
 from pysmd.interface.pyscf.gpu import GPU4RHF, GPU4RKS, _load_gpu4pyscf
 from pysmd.interface.pyscf.rhf import RHF
 from pysmd.interface.pyscf.rks import RKS
+from pysmd.interface.pyscf.uhf import UHF
+from pysmd.interface.pyscf.uks import UKS
 
 log = logger.getLogger(__name__)
 
@@ -54,15 +58,18 @@ def PyscfDriver(
     pyscf_mf: object | None = None,
     pyscf_mol: gto.MoleBase | None = None,
     backend: str = "cpu",
+    *,
+    unrestricted: bool | None = None,
     **kwargs: Any,
-) -> RHF | RKS | GPU4RHF | GPU4RKS:
+) -> RHF | RKS | UHF | UKS | GPU4RHF | GPU4RKS:
     """Create the appropriate PySMD adapter for a PySCF mean-field object.
 
     The dispatch pattern follows PySCF's mean-field factory style, but the
-    returned object is a PySMD adapter. CPU ``RHF`` and ``RKS`` adapters use
-    direct PySCF calls for standard quantities and add the PySMD-specific
-    operations required by the shadow-MD driver. GPU selections return the
-    corresponding GPU4PySCF adapters.
+    returned object is a PySMD adapter. CPU ``RHF``, ``RKS``, ``UHF``, and
+    ``UKS`` adapters use direct PySCF calls for standard quantities and add
+    the PySMD-specific operations required by the shadow-MD driver. GPU
+    selections return the corresponding GPU4PySCF adapters, which are
+    restricted-only.
 
     Both pyscf_mf and pyscf_mol are optional (matching the interface class
     signatures), but at least one must be provided. If pyscf_mf is provided,
@@ -73,12 +80,18 @@ def PyscfDriver(
     Parameters
     ----------
     pyscf_mf : object, optional
-        PySCF or GPU4PySCF mean-field object. RHF and RKS are supported.
+        PySCF or GPU4PySCF mean-field object. RHF, RKS, UHF, and UKS are
+        supported on the CPU; RHF and RKS on the GPU.
     pyscf_mol : gto.MoleBase, optional
         PySCF molecule object. Can be provided alone or with pyscf_mf.
         If pyscf_mf is also provided, it takes precedence.
     backend : {"cpu", "gpu", "auto"}, default="cpu"
         Electronic backend. Auto detects pyscf_mf and defaults molecules to CPU.
+    unrestricted : bool, optional
+        Molecule-only selection of an unrestricted adapter. By default a
+        nonzero ``mol.spin`` (N_alpha - N_beta) selects UHF/UKS and a zero
+        spin selects RHF/RKS; pass ``True`` for a spin-balanced unrestricted
+        calculation. Ignored when pyscf_mf is provided.
     **kwargs
         Additional keyword arguments to pass to the specific interface class.
         - 'xc' (str): Exchange-correlation functional for DFT methods (RKS, UKS)
@@ -86,12 +99,14 @@ def PyscfDriver(
 
     Returns
     -------
-    RHF | RKS | GPU4RHF | GPU4RKS
+    RHF | RKS | UHF | UKS | GPU4RHF | GPU4RKS
         An instance of the appropriate PySCF interface class. The specific
         type depends on the mean-field object provided:
 
         - scf.hf.RHF → RHF
         - dft.rks.RKS → RKS
+        - scf.uhf.UHF → UHF
+        - dft.uks.UKS → UKS
         - gpu4pyscf.scf.RHF → GPU4RHF
         - gpu4pyscf.dft.RKS → GPU4RKS
 
@@ -103,7 +118,10 @@ def PyscfDriver(
     TypeError
         If the mean-field object type is not recognized or supported
     ValueError
-        If both pyscf_mf and pyscf_mol are None
+        If both pyscf_mf and pyscf_mol are None, or a restricted adapter is
+        requested for a molecule with nonzero spin
+    NotImplementedError
+        For ROHF, or unrestricted references on the GPU backend
 
     Examples
     --------
@@ -121,7 +139,7 @@ def PyscfDriver(
 
     >>> # Example 2: With DFT mean-field object
     >>> mf_dft = dft.RKS(mol)
-    >>> mf_dft.xc = 'b3lyp'
+    >>> mf_dft.xc = 'pbe'
     >>> mf_dft.kernel()
     >>> qm_interface = PyscfDriver(pyscf_mf=mf_dft)
     >>> # Returns an RKS interface object
@@ -134,13 +152,18 @@ def PyscfDriver(
     >>> qm_interface = PyscfDriver(pyscf_mol=mol)
     >>> # Returns an RHF interface object
 
+    >>> # Example 5: Doublet OH, N_alpha - N_beta = 1
+    >>> oh = gto.M(atom='O 0 0 0; H 0 0 0.97', basis='sto-3g', spin=1)
+    >>> qm_interface = PyscfDriver(pyscf_mol=oh, xc='pbe')
+    >>> # Returns a UKS interface object
+
     Notes
     -----
     - If pyscf_mf is provided, it takes precedence over pyscf_mol for
       determining the interface type
     - The function uses isinstance checks to determine the mean-field type
     - Check order: RKS → UKS → RHF → UHF (DFT first since they inherit from HF)
-    - Currently supports: RHF, RKS (UHF and UKS support can be added)
+    - ROHF is not an unrestricted reference and is not supported
     - Both parameters are optional to match interface class signatures, but
       at least one must be provided
     """
@@ -204,14 +227,12 @@ def PyscfDriver(
 
         elif isinstance(pyscf_mf, dft.uks.UKS):
             log.info(">> PySCF factory detected UKS mean-field object")
-            raise NotImplementedError(
-                "UKS interface not yet implemented. "
-                "Please use RKS for restricted systems."
-            )
+            return UKS(pyscf_mf=pyscf_mf, pyscf_mol=None, **kwargs)
 
         elif isinstance(pyscf_mf, scf.rohf.ROHF):
             raise NotImplementedError(
-                "ROHF interface not yet implemented. Use RHF for closed-shell systems."
+                "ROHF interface not yet implemented. Use RHF for closed-shell "
+                "systems or UHF for unrestricted open-shell systems."
             )
 
         # Check for HF methods
@@ -221,25 +242,44 @@ def PyscfDriver(
 
         elif isinstance(pyscf_mf, scf.uhf.UHF):
             log.info(">> PySCF factory detected UHF mean-field object")
-            raise NotImplementedError(
-                "UHF interface not yet implemented. "
-                "Please use RHF for restricted systems."
-            )
+            return UHF(pyscf_mf=pyscf_mf, pyscf_mol=None, **kwargs)
 
         else:
             raise TypeError(
                 f"Unsupported mean-field type: {type(pyscf_mf).__name__}. "
-                f"Currently supported types: RHF, RKS"
+                f"Currently supported types: RHF, RKS, UHF, UKS"
             )
 
     # If only molecule is provided, infer method type from kwargs
     else:
+        if not isinstance(pyscf_mol, gto.MoleBase):
+            raise TypeError(f"pyscf_mol must be an instance of gto.MoleBase, "
+                            f"got {type(pyscf_mol).__name__}")
+        if unrestricted is None:
+            unrestricted = pyscf_mol.spin != 0
+
         if backend == "auto":
             backend = "cpu"
         if backend == "gpu":
+            if unrestricted:
+                raise NotImplementedError(
+                    "GPU4PySCF unrestricted interfaces are not implemented."
+                )
             if "xc" in kwargs:
                 return GPU4RKS(pyscf_mol=pyscf_mol, **kwargs)
             return GPU4RHF(pyscf_mol=pyscf_mol, **kwargs)
+
+        if unrestricted:
+            if 'xc' in kwargs:
+                log.info(">> PySCF factory: unrestricted with xc, creating UKS interface")
+                return UKS(pyscf_mol=pyscf_mol, pyscf_mf=None, **kwargs)
+            log.info(">> PySCF factory: unrestricted, creating UHF interface")
+            return UHF(pyscf_mol=pyscf_mol, pyscf_mf=None, **kwargs)
+
+        if pyscf_mol.spin != 0:
+            raise ValueError(
+                "Use an unrestricted interface for a nonzero molecular spin."
+            )
 
         # Try to infer from kwargs or default to RHF
         if 'xc' in kwargs:
@@ -253,6 +293,8 @@ __all__ = [
     "PyscfDriver",
     "RHF",
     "RKS",
+    "UHF",
+    "UKS",
     "GPU4RHF",
     "GPU4RKS",
 ]

@@ -52,7 +52,7 @@ EOM_INTEGRATION_COEFFS: dict[str, dict[int, dict[str, tuple[float, ...]]]] = {
 
         2: { # l_max = 2
             "coord_coeffs": (_a1_opt_lmax2, _a2_opt_lmax2),
-            "veloc_coeffs": (_a1_opt_lmax2, _a2_opt_lmax2)
+            "veloc_coeffs": (_a2_opt_lmax2, _a1_opt_lmax2)
         },
 
         3: { # l_max = 3

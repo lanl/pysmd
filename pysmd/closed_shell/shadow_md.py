@@ -554,6 +554,9 @@ class ShadowMD:
                             half the number of electrons. Each such orbital
                             has PySMD occupation one at zero temperature.
         """
+        if getattr(self.interface, "spin_channels", 1) != 1:
+            raise TypeError("Use pysmd.open_shell for an unrestricted interface.")
+
         ### System properties
         self.n_atom = self.interface.get_num_atoms()
         self.n_elec = self.interface.get_num_electrons()
